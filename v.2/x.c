@@ -7,69 +7,20 @@ char	ground;
 char	rock;
 char	box;
 
-int	atoi_(char *str)
-{
-	int	nbr;
-
-	nbr = 0;
-	while (*str != 'k')
-	{
-		nbr = nbr * 10 + *str - '0';
-		str++;
-	}
-	return (nbr);
-}
-
 int	get_size_of_argu(char *map_file_name, int *length_of_parsed_array)
 {
 	int	fd;
 	int	size_argu;
-	char	buff[100];
-	char	buff_core[6] = {'k', 'k', 'k', 'k', 'k', 'k'};
-	char	*p_buff;
-	int	i;
+	char	buff;
 
-	
-	//read(fd, length_of_parsed_array, 1);
-	//*length_of_parsed_array -= '0';
-
-
-	p_buff = buff;
 	size_argu = 0;
 	fd = open(map_file_name, O_RDONLY);
-
-	i = 0;
-	while (read(fd, p_buff, 1) != 0)
-	{
-		if (buff[i++] == '\n')
-		{
-			break;
-		}
-		p_buff++;
-	}
-	printf("i : ___ %d\n", i);
-	i -= 5;
-	while (i >= 0)
-	{
-		*buff_core = *buff;
-		i--;
-	}
-	printf("buff_core : ___ %c\n", buff_core[0]);
-	printf("buff_core : ___ %c\n", buff_core[1]);
-
-	*length_of_parsed_array = atoi_(buff_core);
-
-	printf("atoi return : ___ %d", *length_of_parsed_array);
-	
-
-
-	close(fd);
-
-	fd = open(map_file_name, O_RDONLY);
-	while (read(fd, buff, 1) != 0)
+	read(fd, length_of_parsed_array, 1);
+	*length_of_parsed_array -= '0';
+	while (read(fd, &buff, 1) != 0)
 		size_argu++;
 	close(fd);
-	return (size_argu);
+	return (size_argu + 1);
 }
 
 void	push_data_into_array(char *map_file_name, char *raw_map_data_array)
@@ -99,9 +50,7 @@ void	make_1D_to_2D(char *raw_m_data, int **parsed_m_data, int size_argu, int len
 
 // 아래의 숫자 5는 map raw data의 0번째 행이 개행까지 5칸이라는 제한 하의 숫자다. 즉 행의 길이가 1자리 숫자인 경우다. 
 // 따라서 수식으로 바뀌어야 하는 값이다. 0번째 행을 분석해서 지도의 행 수가 2자리인지 3자리인지에 따라 달라져야한다.	
-	while (*raw_m_data != '\n')
-		raw_m_data++;
-	raw_m_data++;
+	raw_m_data += 5;
 	printf("length of parsed array:   %d\n", length_of_parsed_array);
 		
 	while (i < length_of_parsed_array)
