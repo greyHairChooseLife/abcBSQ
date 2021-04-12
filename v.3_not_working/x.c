@@ -12,7 +12,7 @@ int	atoi_(char *str)
 	int	nbr;
 
 	nbr = 0;
-	while (*str != '\0')
+	while (*str != 'k')
 	{
 		nbr = nbr * 10 + *str - '0';
 		str++;
@@ -25,7 +25,7 @@ int	get_size_of_argu(char *map_file_name, int *length_of_parsed_array)
 	int	fd;
 	int	size_argu;
 	char	buff[100];
-	char	buff_core[1];
+	char	buff_core[6] = {'k', 'k', 'k', 'k', 'k', 'k'};
 	char	*p_buff;
 	int	i;
 
@@ -47,14 +47,16 @@ int	get_size_of_argu(char *map_file_name, int *length_of_parsed_array)
 		}
 		p_buff++;
 	}
-	i -= 4;
-	while (i > 0)
+	printf("i : ___ %d\n", i);
+	i -= 5;
+	while (i >= 0)
 	{
 		*buff_core = *buff;
 		i--;
 	}
 	printf("buff_core : ___ %c\n", buff_core[0]);
 	printf("buff_core : ___ %c\n", buff_core[1]);
+
 	*length_of_parsed_array = atoi_(buff_core);
 
 	printf("atoi return : ___ %d", *length_of_parsed_array);
