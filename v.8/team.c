@@ -48,19 +48,38 @@ void ft_count_row_size(int fd)
 	g_row_size = i;
 }
 
+
+
+
+
+char	sidekick_ft_set_charset(char *line)
+{
+	int i;
+	int result;
+
+	i = 0;
+	result = 0;
+	while (line[i])
+	{
+		if (line[i] != g_empty_char && '0' <= line[i] && line[i] <= '9')
+			result = result * 10 + line[i] -'0';
+		else
+			break ;
+		i++;
+	}
+	g_col_size = result;
+	return (line[i]);
+}
+
 int ft_set_charset(char *file, int size)
 {
 	char *line;
 	int i;
 	int fd;
-	int result;
+	char error_check;
 	
 	i = 0;
-	if ((fd = open(file, O_RDONLY)) == -1)
-	{
-		write(2, "MAP ERROR\n", 10); 			//  2번째 파일오픈 에러체크 중복됨,   
-		return (0);
-	}
+	fd = open(file, O_RDONLY);
 	if (!(line = malloc((size + 1) * sizeof(char))))
 	{
 		write(2, "MAP ERROR\n", 10);			//   malloc에러인데 맵 에러 메시지  
@@ -75,23 +94,10 @@ int ft_set_charset(char *file, int size)
 	g_empty_char = line[i - 3];
 	g_obstacle_char = line[i - 2];
 	g_full_char = line[i - 1];
-	i = 0;
-	result = 0;
-	while (line[i])
-	{
-		if (line[i] != g_empty_char && '0' <= line[i] && line[i] <= '9')
-		{
-			result *= 10; 									// result = result * 10 + line[i] - '0';
-			result += line[i] - '0';
-		}
-		else
-			break ;
-		i++;
-	}
-	g_col_size = result;
+	error_check = sidekick_ft_set_charset(line);
 	ft_count_row_size(fd);
 	close(fd);
-	return (line[i] == g_empty_char ? 1 : 0);      			// 반대로 아닌가   왜 잘 작동하는거지
+	return (error_check == g_empty_char ? 1 : 0);      			// 반대로 아닌가   왜 잘 작동하는거지
 }
 
 int ft_count_file_size(char *file)
@@ -113,17 +119,6 @@ int ft_count_file_size(char *file)
 	return (size);
 }
 
-// 
-//
-//
-//      여기부터 수정한다. 표준입력 받은것을 ft_set_input_map()에 인자로 줄것
-//
-//
-//
-//
-
-
-//char **ft_set_input_map
 char *ft_push_array(int fd, int size)
 {
 	char *array;
@@ -188,18 +183,6 @@ char **ft_set_input_map(char *file, int size, char *keyboard_array)
 	close(fd);
 	return (map);												
 }	
-
-
-
-// 
-//
-//
-//       여기까지 수정됨. 
-//
-//
-//
-//
-
 
 char **ft_valid_argv(char *file)
 {
@@ -342,16 +325,7 @@ void ft_bsq_solution(char **input_map)
 	int j;
 	char **map;
 
-	i = 0;
-	     												//  체크포인트
-	while (i < g_col_size)
-	{
-		printf("%s inputmap\n", input_map[i]);
-		i++;
-	}
 	map = ft_solve_map(input_map);
-	printf("\n------------------------------------end of solution--------------------------------------------------\n");
-	     												//  체크포인트
 	i = 0;
 	j = 0;
 	while (i < g_col_size)
@@ -385,6 +359,7 @@ int		check_exceptions_argc_1(char *map_keyboard, int i)
 
 int	check_exceptions_argc_2(int i, char *map_keyboard)
 {
+	i = 0;
 	while (map_keyboard[i] != '\n')
 		i++;
 	while (map_keyboard[i] != '\0')
@@ -438,39 +413,11 @@ void	get_col_size(char *map_keyboard)
 }
 
 
-
-int main(int argc, char *argv[])
+int	read_keyboard(char *map_keyboard)
 {
 	int i;
-	char **map;
-	char *map_keyboard;
 	int	temp;
-
-	int	temp2;
-	
-	i = 1;
-	if (argc > 1)
-	{
-		while (i < argc)
-		{
-		if((map = ft_valid_argv(argv[i])))       // **map 의 free가 언제 이루어지는지 잘 확인하자   // map이 0이 되는 경우는 ft_push_array가 모든  ccol_size만큼 malloc을 실패하는 경우
-				ft_bsq_solution(map);
-			i++;
-		}
-	}
-	else if (argc == 1)
-	{
-		
-	if (!(map_keyboard = (char *)malloc(sizeof(char) * 50000)))
-		printf("malloc fail_Error\n");
-	read(0, map_keyboard, 50000);
-
-	i = get_3_simbols(i, map_keyboard);
-
-	if(check_exceptions_argc_1(map_keyboard, i) == 1)
-		return (1);
-
-	get_col_size(map_keyboard);
+	int temp2;
 
 	i = 0;
 	while (i < g_col_size)
@@ -491,16 +438,47 @@ int main(int argc, char *argv[])
 			return (1);
 		}
 	}
-	i = 0;
-	map_keyboard -= temp * g_col_size;
 	g_row_size = temp - 1;
+	return (temp);
+}
 
-	if(check_exceptions_argc_2(i, map_keyboard) == 1)
-			return (1);
+ 															//  체크포인트, 실패 대비용 백업 체크포인트 !!
+char *malloc_for_keyboard(char *map_keyboard, int *i)
+{
+	if (!(map_keyboard = (char *)malloc(sizeof(char) * 50000)))
+		printf("malloc fail_Error\n");
+	read(0, map_keyboard, 50000);
 
+	*i = get_3_simbols(*i, map_keyboard);
+	return (map_keyboard);
+}
+
+
+int main(int argc, char *argv[])
+{
+	int i;
+	char **map;
+	char *map_keyboard;
+	int	temp;
+	
+	i = 1;
+	if (argc > 1)
+	{
+		while (i < argc)
+		{
+			if((map = ft_valid_argv(argv[i++])))       // **map 의 free가 언제 이루어지는지 잘 확인하자 
+				ft_bsq_solution(map);
+		}
+	}
+	if (argc != 1)
+		return (0);
+
+	map_keyboard = malloc_for_keyboard(map_keyboard, &i);
+	get_col_size(map_keyboard);
+	if (check_exceptions_argc_1(map_keyboard, i) == 1 || (temp = read_keyboard(map_keyboard)) == -2 || check_exceptions_argc_2(i, map_keyboard) == 1)
+		return (1);
 	if ((map = ft_set_input_map(map_keyboard, 5, map_keyboard )))
 		ft_bsq_solution(map);
 
-	}
 	return (0);
 }
